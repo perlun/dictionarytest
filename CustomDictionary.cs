@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -17,7 +19,9 @@ namespace DictionaryTest
     // Caveats:
     //
     // - Not thread safe.
-    public class CustomDictionary<TKey, TValue>
+    // - Quite slow when the bucket has to be resized (since it involves re-populating all the bucket entries with
+    //   new hashes)
+    public class CustomDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
         // Note: the value here MUST be an even power of two, otherwise the algorithm used by this class will fail.
         const int INITIAL_BUCKET_SIZE = 1024;
@@ -26,6 +30,14 @@ namespace DictionaryTest
 
         // 1024 = 0b1000000000 => 0b0111111111
         private int BucketSizeMask = INITIAL_BUCKET_SIZE - 1;
+
+        public ICollection<TKey> Keys => throw new NotImplementedException();
+
+        public ICollection<TValue> Values => throw new NotImplementedException();
+
+        public int Count => throw new NotImplementedException();
+
+        public bool IsReadOnly => throw new NotImplementedException();
 
         private void PutEntryInList(int bucketIndex, TKey key, TValue value, int hashCode)
         {
@@ -59,7 +71,32 @@ namespace DictionaryTest
         {
             get
             {
-                throw new NotImplementedException();
+                var hashCode = key.GetHashCode();
+                int bucketIndex = hashCode & BucketSizeMask;
+
+                var entry = BucketList[bucketIndex];
+
+                if (entry == null ||
+                    entry?.Hash == hashCode)
+                {
+                    return entry.Value.Value;
+                }
+                else
+                {
+                    // Try to find a subsequent slot, since the item might have been moved due to collisions.
+                    int size = BucketList.Count();
+
+                    for (int i = bucketIndex; i < size; i++)
+                    {
+                        if (BucketList[i].Value.Hash == hashCode)
+                        {
+                            return BucketList[i].Value.Value;
+                        }
+                    }
+
+                    // The item does not exist in this dictionary.
+                    return default(TValue);
+                }
             }
 
             set
@@ -121,6 +158,61 @@ namespace DictionaryTest
             sb.AppendLine($"Number of entries in dictionary: {count}");
 
             return sb.ToString();
+        }
+
+        public void Add(TKey key, TValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool ContainsKey(TKey key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(TKey key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(KeyValuePair<TKey, TValue> item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(KeyValuePair<TKey, TValue> item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            throw new NotImplementedException();
         }
     }
 }
